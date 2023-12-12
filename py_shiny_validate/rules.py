@@ -2,6 +2,12 @@ from typing import Callable
 import re
 import numpy as np
 
+err_msg_zero_length_value = "Must not contain zero values."
+err_msg_allow_multiple = "Must not contain multiple values."
+err_msg_allow_na = "Must not contain `NA` values."
+err_msg_allow_nan = "Must not contain `NaN` values."
+err_msg_allow_infinite = "Must not contain infinite values."
+
 
 def input_provided(val: any):
     print(val)
@@ -193,45 +199,62 @@ def sv_url(
     return inner
 
 
-def sv_integer(
-    message: str = "An integer is required",
-    allow_multiple: bool = False,
-    allow_na: bool = False,
-    allow_nan: bool = False,
-):
+def compose_rules(*args):
     """
-    Generate a validation function that checks if the input value is an integer.
+    Combine multiple validation rules into one.
 
     Parameters
     ----------
-    message : str
-        The error message to return if the input value is not an integer.
-    allow_multiple : bool, optional
-        If True, multiple integers are allowed. Default is False.
-    allow_na : bool, optional
-        If True, NA values are allowed. Default is False.
-    allow_nan : bool, optional
-        If True, NaN values are allowed. Default is False.
+    *args : functions
+        Validation functions to combine.
 
     Returns
     -------
     function
-        A function that takes an input value and returns the error message if the input value is not an integer.
+        A function that takes an input value and checks it against all the provided validation functions.
+        Returns the error message from the first validation function that fails, or None if all validation functions pass.
+    """
+    rule_fns = [arg for arg in args if callable(arg)]
+
+    def inner(value: str):
+        for rule_fn in rule_fns:
+            res = rule_fn(value)
+            if res is not None:
+                return res
+
+    return inner
+
+
+def sv_basic(allow_multiple: bool, allow_na: bool, allow_nan: bool, allow_inf: bool):
+    """
+    Basic validation function.
+
+    Parameters
+    ----------
+    allow_multiple : bool
+        If False, the input value must be a single value.
+    allow_na : bool
+        If False, the input value cannot be None.
+    allow_nan : bool
+        If False, the input value cannot be NaN.
+    allow_inf : bool
+        If False, the input value cannot be infinite.
+
+    Returns
+    -------
+    function
+        A function that takes an input value and checks it against the set constraints.
+        Returns an error message if the input value fails any of the constraints.
     """
 
     def inner(value: str):
-        if allow_na and value is None:
-            return
-        if allow_nan and np.isnan(value):
-            return
-
-        if allow_multiple:
-            integers = value.split(",")
-            for integer in integers:
-                if not re.search(r"^-?\d+$", integer.strip()):
-                    return message
-        else:
-            if not re.search(r"^-?\d+$", value):
-                return message
+        if not allow_multiple and len(value) != 1:
+            return "Multiple values are not allowed."
+        if not allow_na and value is None:
+            return "NA values are not allowed."
+        if not allow_nan and value == "NaN":
+            return "NaN values are not allowed."
+        if not allow_inf and value == "Inf":
+            return "Infinite values are not allowed."
 
     return inner

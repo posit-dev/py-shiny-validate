@@ -28,19 +28,26 @@ class InputValidator:
         priority=1000,
         session: Session = get_current_session(),
     ):
+        if session is None:
+            raise ValueError(
+                "InputValidator objects should be created in the context of Shiny server functions or Shiny module server functions"
+            )
         self.session = session
         self.priority: int = priority
-        self.condition_ = None
-        self.rules: dict[str, Rule] = {}
-        self.is_child: bool = False
+        self.condition_ = reactive.Value(None)
+        self.rules: reactive.Value[dict[str, Rule]] = reactive.Value({})
+
         self.enabled: bool = False
         self.observer_handle: Optional[reactive.Effect] = None
+        self.is_child = False
 
-    def initialize(self, session: Session, priority: int = 1000):
-        self.condition = reactive.Value(None, label="validator_condition")
-        self.rules = reactive.Value([], label="validation_rules")
-
-        ui.insert_ui("body", "beforeEnd", html_deps(), immediate=True, session=session)
+        # ui.insert_ui(
+        #     "body",
+        #     "beforeEnd",
+        #     html_deps,
+        #     immediate=True,
+        #     session=session,
+        # )
 
     def parent(self, validator):
         self.disable()
@@ -68,16 +75,24 @@ class InputValidator:
         if not callable(rule):
             raise ValueError("`rule` argument must be a function")
 
-        self.rules[inputId] = Rule(rule, label, session=get_current_session())
+        with reactive.isolate():
+            new_rules = self.rules.get()
+            new_rules[inputId] = Rule(rule, label, session=get_current_session())
+            self.rules.set(new_rules)
 
     def enable(self):
         if self.is_child:
             return
         if not self.enabled:
-            results = self.validate()
 
-            self.session.send_custom_message("validation-jcheng5", results)
+            @reactive.Effect(priority=self.priority)
+            async def observer():
+                results = self.validate()
+                await self.session.send_custom_message("validation-jcheng5", results)
+
             self.enabled = True
+            self.observer_handle = observer
+            return observer
 
     def disable(self):
         if self.enabled:
@@ -90,9 +105,7 @@ class InputValidator:
                 self.session.send_custom_message("validation-jcheng5", results)
 
     def fields(self):
-        fieldslist = [info["validator"].fields() for info in self.validator_infos]
-        fullnames = [rule["session"][name] for name, rule in self.rules.items()]
-        return list(set(fieldslist + fullnames))
+        return list(self.rules().keys())
 
     def is_valid(self):
         results = self.validate()
@@ -106,13 +119,14 @@ class InputValidator:
     def _validate_impl(self):
         # TODO: Implement verbose logging and child_indent
         condition = self.condition_
-        skip_all = callable(condition) and not condition()
+        skip_all = callable(condition()) and condition() is not None
+
         if skip_all:
             # TODO: Implement console_log
             fields = self.fields()
             return {field: None for field in fields}
 
-        dependency_results = {}
+        # dependency_results = {}
 
         # for validator_info in self.validator_infos:
         #     # TODO: Implement console_log
@@ -120,12 +134,12 @@ class InputValidator:
         #     dependency_results = {**dependency_results, **child_results}
 
         results = {}
-        for name, rule in self.rules.items():
-            fullname = rule.session
+        for name, rule in self.rules().items():
+            fullname = rule.session.ns(name)
+
             try:
                 result = rule.rule(rule.session.input[name]())
             except Exception as e:
-                breakpoint()
                 result = "An unexpected error occurred during input validation: " + str(
                     e
                 )
