@@ -11,7 +11,7 @@ app_ui = ui.page_fluid(
 
 
 def server(input: Inputs, output: Outputs, session: Session):
-    val = InputValidator(session=session)
+    val = InputValidator()
     val.add_rule("email", sv_email())
     val.enable()
 

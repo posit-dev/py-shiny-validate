@@ -1,8 +1,9 @@
 from shiny import reactive, ui, Session
+from shiny.session import session_context
 from .deps import html_deps
 from typing import Optional, Callable
 import datetime
-from shiny.session._utils import get_current_session
+from shiny.session import get_current_session, require_active_session
 
 
 class Rule:
@@ -10,7 +11,7 @@ class Rule:
         self,
         rule: Callable,
         label: str,
-        session: Session = get_current_session(),
+        session: Session,
     ):
         self.rule: Callable = rule
         self.label: str = label
@@ -26,13 +27,8 @@ class InputValidator:
     def __init__(
         self,
         priority=1000,
-        session: Session = get_current_session(),
     ):
-        if session is None:
-            raise ValueError(
-                "InputValidator objects should be created in the context of Shiny server functions or Shiny module server functions"
-            )
-        self.session = session
+        self.session = require_active_session(get_current_session())
         self.priority: int = priority
         self.condition_ = reactive.Value(None)
         self.rules: reactive.Value[dict[str, Rule]] = reactive.Value({})
@@ -84,15 +80,18 @@ class InputValidator:
         if self.is_child:
             return
         if not self.enabled:
+            with session_context(self.session):
 
-            @reactive.Effect(priority=self.priority)
-            async def observer():
-                results = self.validate()
-                await self.session.send_custom_message("validation-jcheng5", results)
+                @reactive.Effect(priority=self.priority)
+                async def observer():
+                    results = self.validate()
+                    await self.session.send_custom_message(
+                        "validation-jcheng5", results
+                    )
 
-            self.enabled = True
-            self.observer_handle = observer
-            return observer
+                self.enabled = True
+                self.observer_handle = observer
+                return observer
 
     def disable(self):
         if self.enabled:
