@@ -1,12 +1,19 @@
 from typing import Callable
-import re
-import numpy as np
 
 err_msg_zero_length_value = "Must not contain zero values."
 err_msg_allow_multiple = "Must not contain multiple values."
-err_msg_allow_na = "Must not contain `NA` values."
-err_msg_allow_nan = "Must not contain `NaN` values."
+err_msg_allow_none = "Value must not be 'None'"
 err_msg_allow_infinite = "Must not contain infinite values."
+
+
+def check_input_length(
+    input: any,
+    input_name: str,
+    stop_message: str = "The input for `{input_name}` must contain values.",
+):
+    if len(input) < 1:
+        stop_message = stop_message.format(input_name=input_name)
+        raise ValueError(stop_message)
 
 
 def input_provided(val: any):
@@ -18,7 +25,7 @@ def input_provided(val: any):
     return True
 
 
-def sv_required(message: str = "Required", test: Callable = input_provided):
+def required(message: str = "Required", test: Callable = input_provided):
     """
     Generate a validation function that ensures an input value is present.
 
@@ -49,11 +56,11 @@ def sv_required(message: str = "Required", test: Callable = input_provided):
     return inner
 
 
-def sv_optional(test: Callable = input_provided):
+def optional(test: Callable = input_provided):
     """
     Generate a validation function that indicates an input is allowed to not be present.
-    If an sv_optional rule sees that an input is not present, subsequent rules for that input are skipped and the input is considered valid.
-    Otherwise, the rule simply passes. sv_optional will never return a validation error/message.
+    If an optional rule sees that an input is not present, subsequent rules for that input are skipped and the input is considered valid.
+    Otherwise, the rule simply passes. optional will never return a validation error/message.
 
     Parameters
     ----------
@@ -80,7 +87,7 @@ def sv_optional(test: Callable = input_provided):
     return inner
 
 
-def sv_regex(pattern: str, message: str, ignore_case: bool = False):
+def regex(pattern: str, message: str, ignore_case: bool = False):
     """
     Generate a validation function that checks if the input value matches the given regex pattern.
 
@@ -109,10 +116,10 @@ def sv_regex(pattern: str, message: str, ignore_case: bool = False):
     return inner
 
 
-def sv_email(
+def email(
     message: str = "Not a valid email address",
     allow_multiple: bool = False,
-    allow_na: bool = False,
+    allow_none: bool = False,
 ):
     """
     Generate a validation function that checks if the input value is a valid email address.
@@ -123,8 +130,8 @@ def sv_email(
         The error message to return if the input value is not a valid email address.
     allow_multiple : bool, optional
         If True, multiple email addresses are allowed. Default is False.
-    allow_na : bool, optional
-        If True, NA values are allowed. Default is False.
+    allow_none : bool, optional
+        If True, None values are allowed. Default is False.
 
     Returns
     -------
@@ -139,7 +146,7 @@ def sv_email(
         pattern = "^\\s*[A-Z0-9._%&'*+`/=?^{}~-]+@[A-Z0-9.-]+\\.[A-Z0-9]{2,}\\s*$"
         flags = re.IGNORECASE
 
-        if allow_na and value is None:
+        if allow_none and value is None:
             return
 
         if allow_multiple:
@@ -154,10 +161,10 @@ def sv_email(
     return inner
 
 
-def sv_url(
+def url(
     message: str = "Not a valid URL",
     allow_multiple: bool = False,
-    allow_na: bool = False,
+    allow_none: bool = False,
 ):
     """
     Generate a validation function that checks if the input value is a valid URL.
@@ -168,8 +175,8 @@ def sv_url(
         The error message to return if the input value is not a valid URL.
     allow_multiple : bool, optional
         If True, multiple URLs are allowed. Default is False.
-    allow_na : bool, optional
-        If True, NA values are allowed. Default is False.
+    allow_none : bool, optional
+        If True, None values are allowed. Default is False.
 
     Returns
     -------
@@ -184,7 +191,7 @@ def sv_url(
         pattern = "^(?:(?:http(?:s)?|ftp)://)(?:\\S+(?::(?:\\S)*)?@)?(?:(?:[a-z0-9\u00a1-\uffff](?:-)*)*(?:[a-z0-9\u00a1-\uffff])+)(?:\\.(?:[a-z0-9\u00a1-\uffff](?:-)*)*(?:[a-z0-9\u00a1-\uffff])+)*(?:\\.(?:[a-z0-9\u00a1-\uffff]){2,})(?::(?:\\d){2,5})?(?:/(?:\\S)*)?$"
         flags = re.IGNORECASE
 
-        if allow_na and value is None:
+        if allow_none and value is None:
             return
 
         if allow_multiple:
@@ -225,7 +232,7 @@ def compose_rules(*args):
     return inner
 
 
-def sv_basic(allow_multiple: bool, allow_na: bool, allow_nan: bool, allow_inf: bool):
+def basic(allow_multiple: bool, allow_none: bool, allow_nan: bool, allow_inf: bool):
     """
     Basic validation function.
 
@@ -233,10 +240,8 @@ def sv_basic(allow_multiple: bool, allow_na: bool, allow_nan: bool, allow_inf: b
     ----------
     allow_multiple : bool
         If False, the input value must be a single value.
-    allow_na : bool
+    allow_none : bool
         If False, the input value cannot be None.
-    allow_nan : bool
-        If False, the input value cannot be NaN.
     allow_inf : bool
         If False, the input value cannot be infinite.
 
@@ -248,13 +253,212 @@ def sv_basic(allow_multiple: bool, allow_na: bool, allow_nan: bool, allow_inf: b
     """
 
     def inner(value: str):
-        if not allow_multiple and len(value) != 1:
-            return "Multiple values are not allowed."
-        if not allow_na and value is None:
+        if not allow_none and value is None:
             return "NA values are not allowed."
-        if not allow_nan and value == "NaN":
-            return "NaN values are not allowed."
         if not allow_inf and value == "Inf":
             return "Infinite values are not allowed."
+
+    return inner
+
+
+def check_none(value, allow_none):
+    if allow_none and value is None:
+        err_msg_allow_none
+
+
+def integer(
+    message: str = "An integer is required",
+    allow_none: bool = False,
+):
+    """
+    Generate a validation function that checks if the input value is an integer.
+
+    Parameters
+    ----------
+    message : str
+        The error message to return if the input value is not an integer.
+    allow_none:
+        If False, the input value cannot be None.
+
+    Returns
+    -------
+    function
+        A function that takes an input value and returns the error message if the input value is not an integer.
+    """
+
+    def inner(value: str):
+        if len(value) == 0:
+            return err_msg_zero_length_value
+
+        if not allow_none and value is None:
+            return err_msg_allow_none
+
+        if not isinstance(value, int):
+            return message
+
+    return inner
+
+
+def between(
+    left: float,
+    right: float,
+    inclusive: list[bool],
+    message_fmt: str = "Must be between {left} and {right}.",
+    allow_none: bool = False,
+):
+    message = message_fmt.format(left=left, right=right)
+
+    def inner(value):
+        if allow_none:
+            if left is None:
+                return err_msg_allow_none
+            if right is None:
+                return err_msg_allow_none
+
+        if inclusive[0]:
+            l_of_left = value < left
+        else:
+            l_of_left = value <= left
+
+        if inclusive[1]:
+            l_or_right = value > right
+        else:
+            l_or_right = value >= right
+
+        if l_of_left or l_or_right:
+            return message
+
+    return inner
+
+
+def prepare_values_text(set: set, limit: int) -> str:
+    if limit is not None and len(set) > limit:
+        num_omitted = len(set) - limit
+
+        values_str = ", ".join(str(i) for i in list(set)[:limit])
+
+        additional_text = f"(and {num_omitted} more)"
+
+        values_str = f"{values_str} {additional_text}"
+    else:
+        values_str = ", ".join(str(i) for i in set)
+
+    return values_str
+
+
+def in_set(
+    set: set, message_fmt: str = "Must be in the set of {values_text}.", set_limit=3
+):
+    values_text = prepare_values_text(set, limit=set_limit)
+
+    message = message_fmt.format(values_text=values_text)
+
+    def inner(value):
+        if value not in set:
+            return message
+
+    return inner
+
+
+def compare(
+    rhs: float,
+    message_fmt: str,
+    operator: Callable,
+    allow_none: bool = False,
+):
+    # Preparation of the message
+    message = message_fmt.format(rhs=rhs)
+
+    # Testing of `value` and validation
+    def inner(value):
+        if not allow_none and value is None:
+            return err_msg_allow_none
+
+        res = operator(value, rhs)
+
+        if not res:
+            return message.format(rhs=rhs)
+
+    return inner
+
+
+def gt(rhs: float, allow_none: bool = False, message_fmt="Must be greater than {rhs}."):
+    def inner(value):
+        compare(
+            rhs=rhs,
+            message_fmt=message_fmt,
+            allow_none=allow_none,
+            operator=lambda value, rhs: value > rhs,
+        )
+
+    return inner
+
+
+def gte(
+    rhs: float,
+    allow_none: bool = False,
+    message_fmt="Must be greater than or equal to {rhs}.",
+):
+    def inner(value):
+        compare(
+            rhs=rhs,
+            message_fmt=message_fmt,
+            allow_none=allow_none,
+            operator=lambda value, rhs: value >= rhs,
+        )
+
+    return inner
+
+
+def lt(rhs: float, allow_none: bool = False, message_fmt="Must be less than {rhs}."):
+    def inner(value):
+        compare(
+            rhs=rhs,
+            message_fmt=message_fmt,
+            allow_none=allow_none,
+            operator=lambda value, rhs: value < rhs,
+        )
+
+    return inner
+
+
+def lte(
+    rhs: float,
+    allow_none: bool = False,
+    message_fmt="Must be less than or equal to {rhs}.",
+):
+    def inner(value):
+        compare(
+            rhs=rhs,
+            message_fmt=message_fmt,
+            allow_none=allow_none,
+            operator=lambda value, rhs: value <= rhs,
+        )
+
+    return inner
+
+
+def equal(rhs: float, allow_none: bool = False, message_fmt="Must be equal to {rhs}."):
+    def inner(value):
+        compare(
+            rhs=rhs,
+            message_fmt=message_fmt,
+            allow_none=allow_none,
+            operator=lambda value, rhs: value == rhs,
+        )
+
+    return inner
+
+
+def not_equal(
+    rhs: float, allow_none: bool = False, message_fmt="Must not be equal to {rhs}."
+):
+    def inner(value):
+        compare(
+            rhs=rhs,
+            message_fmt=message_fmt,
+            allow_none=allow_none,
+            operator=lambda value, rhs: value != rhs,
+        )
 
     return inner
