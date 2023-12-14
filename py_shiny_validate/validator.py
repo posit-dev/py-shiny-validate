@@ -4,6 +4,7 @@ from .deps import html_deps
 from typing import Optional, Callable
 import datetime
 from shiny.session import get_current_session, require_active_session
+from htmltools import HTML
 
 
 class Rule:
@@ -36,13 +37,16 @@ class InputValidator:
         self.enabled: bool = False
         self.observer_handle: Optional[reactive.Effect] = None
         self.is_child = False
+        self.validator_infos: reactive.Value[
+            dict[str, InputValidator]
+        ] = reactive.Value({})
 
         # ui.insert_ui(
         #     "body",
         #     "beforeEnd",
-        #     html_deps,
+        #     [html_deps, HTML("")],
         #     immediate=True,
-        #     session=session,
+        #     session=self.session,
         # )
 
     def parent(self, validator):
@@ -57,14 +61,22 @@ class InputValidator:
                 raise ValueError("`cond` argument must be a formula or None")
             self.condition_ = cond
 
-    def add_validator(self, validator, label: Optional[str] = None):
+    def add_validator(
+        self,
+        validator,
+        label: Optional[str] = None,
+    ):
         if not isinstance(validator, InputValidator):
             raise ValueError(
                 "`validator` argument must be an instance of InputValidator"
             )
         label = label or str(validator)
         validator.parent(self)
-        self.validator_infos.append({"validator": validator, "label": label})
+
+        with reactive.isolate():
+            validators = self.validator_infos.get()
+            validators[label] = validator
+            self.validator_infos.set(validators)
 
     def add_rule(self, inputId: str, rule: Callable):
         label = str(rule)
@@ -125,12 +137,12 @@ class InputValidator:
             fields = self.fields()
             return {field: None for field in fields}
 
-        # dependency_results = {}
+        dependency_results = {}
 
-        # for validator_info in self.validator_infos:
-        #     # TODO: Implement console_log
-        #     child_results = validator_info["validator"]._validate_impl()
-        #     dependency_results = {**dependency_results, **child_results}
+        for validator_info in self.validator_infos().values():
+            # TODO: Implement console_log
+            child_results = validator_info._validate_impl()
+            dependency_results = {**dependency_results, **child_results}
 
         results = {}
         for name, rule in self.rules().items():
@@ -181,7 +193,7 @@ class InputValidator:
             if results[key] is True:
                 results[key] = None
 
-        return {**results}
+        return {**dependency_results, **results}
 
 
 def merge_results(self, resultsA: dict, resultsB: dict) -> dict:
