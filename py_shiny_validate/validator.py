@@ -4,7 +4,7 @@ from .deps import html_deps
 from typing import Optional, Callable
 import datetime
 from shiny.session import get_current_session, require_active_session
-from htmltools import HTML
+from htmltools import HTML, TagList
 
 
 class Rule:
@@ -41,13 +41,24 @@ class InputValidator:
             dict[str, InputValidator]
         ] = reactive.Value({})
 
-        # ui.insert_ui(
-        #     "body",
-        #     "beforeEnd",
-        #     [html_deps, HTML("")],
-        #     immediate=True,
-        #     session=self.session,
-        # )
+        # TODO when shiny allows us to set client data these dependencies should only be injected once
+        # R code for reference
+        #
+        # if (!isTRUE(session$userData[["shinyvalidate-initialized"]])) {
+        #     shiny::insertUI("body", "beforeEnd",
+        #         list(htmldep(), htmltools::HTML("")),
+        #         immediate = TRUE, session = session
+        #     )
+        #     session$userData[["shinyvalidate-initialized"]] <- TRUE
+        # }
+
+        ui.insert_ui(
+            html_deps,
+            "body",
+            "beforeEnd",
+            immediate=True,
+            session=self.session,
+        )
 
     def parent(self, validator):
         self.disable()
