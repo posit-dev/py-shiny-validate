@@ -383,7 +383,9 @@ def prepare_values_text(set: set, limit: int) -> str:
 
 
 def in_set(
-    set: set, message_fmt: str = "Must be in the set of {values_text}.", set_limit=3,
+    set: set,
+    message_fmt: str = "Must be in the set of {values_text}.",
+    set_limit=3,
 ):
     """
     Generate a validation function that checks if the input value is in a given set of values.
@@ -454,161 +456,6 @@ def compare(
     return inner
 
 
-def between(rhs: float, allow_none: bool = False, message|def between(
-    left: float,
-    right: float,
-    inclusive: list[bool],
-    message_fmt: str = "Must be between {left} and {right}.",
-    allow_none: bool = False,
-):
-    """
-    Generate a validation function that checks if the input value is between two given values.
-
-    Parameters
-    ----------
-    left : float
-        The lower bound of the range.
-    right : float
-        The upper bound of the range.
-    inclusive : list[bool]
-        A list of two boolean values indicating whether the bounds are inclusive.
-    message_fmt : str
-        The error message to return if the input value is not within the range.
-    allow_none:
-        If False, the input value cannot be None.
-
-    Returns
-    -------
-    function
-        A function that takes an input value and returns the error message if the input value is not within the range.
-    """
-    message = message_fmt.format(left=left, right=right)
-
-    def inner(value):
-        if allow_none:
-            if left is None:
-                return err_msg_allow_none
-            if right is None:
-                return err_msg_allow_none
-
-        if inclusive[0]:
-            l_of_left = value < left
-        else:
-            l_of_left = value <= left
-
-        if inclusive[1]:
-            l_or_right = value > right
-        else:
-            l_or_right = value >= right
-
-        if l_of_left or l_or_right:
-            return message
-
-    return inner
-
-
-def prepare_values_text(set: set, limit: int) -> str:
-    """
-    Prepare a string representation of a set of values.
-
-    Parameters
-    ----------
-    set : set
-        The set of values to represent.
-    limit : int
-        The maximum number of values to include in the representation.
-
-    Returns
-    -------
-    str
-        A string representation of the set of values.
-    """
-    if limit is not None and len(set) > limit:
-        num_omitted = len(set) - limit
-
-        values_str = ", ".join(str(i) for i in list(set)[:limit])
-
-        additional_text = f"(and {num_omitted} more)"
-
-        values_str = f"{values_str} {additional_text}"
-    else:
-        values_str = ", ".join(str(i) for i in set)
-
-    return values_str
-
-
-def in_set(
-    set: set, message_fmt: str = "Must be in the set of {values_text}.", set_limit=3
-):
-    """
-    Generate a validation function that checks if the input value is in a given set.
-
-    Parameters
-    ----------
-    set : set
-        The set of allowed values.
-    message_fmt : str
-        The error message to return if the input value is not in the set.
-    set_limit : int
-        The maximum number of values to include in the error message.
-
-    Returns
-    -------
-    function
-        A function that takes an input value and returns the error message if the input value is not in the set.
-    """
-    values_text = prepare_values_text(set, limit=set_limit)
-
-    message = message_fmt.format(values_text=values_text)
-
-    def inner(value):
-        if value not in set:
-            return message
-
-    return inner
-
-
-def compare(
-    rhs: float,
-    message_fmt: str,
-    operator: Callable,
-    allow_none: bool = False,
-):
-    """
-    Generate a validation function that compares the input value with a given value using a given operator.
-
-    Parameters
-    ----------
-    rhs : float
-        The value to compare with.
-    message_fmt : str
-        The error message to return if the comparison fails.
-    operator : Callable
-        The operator to use for the comparison.
-    allow_none : bool
-        If False, the input value cannot be None.
-
-    Returns
-    -------
-    function
-        A function that takes an input value and returns the error message if the comparison fails.
-    """
-    # Preparation of the message
-    message = message_fmt.format(rhs=rhs)
-
-    # Testing of `value` and validation
-    def inner(value):
-        if not allow_none and value is None:
-            return err_msg_allow_none
-
-        res = operator(value, rhs)
-
-        if not res:
-            return message.format(rhs=rhs)
-
-    return inner
-
-
 def gt(rhs: float, allow_none: bool = False, message_fmt="Must be greater than {rhs}."):
     """
     Generate a validation function that checks if the input value is greater than a given value.
@@ -627,6 +474,7 @@ def gt(rhs: float, allow_none: bool = False, message_fmt="Must be greater than {
     function
         A function that takes an input value and returns the error message if the input value is not greater than the given value.
     """
+
     def inner(value):
         compare(
             rhs=rhs,
@@ -660,6 +508,7 @@ def gte(
     function
         A function that takes an input value and returns the error message if the input value is not greater than or equal to the given value.
     """
+
     def inner(value):
         compare(
             rhs=rhs,
@@ -690,6 +539,7 @@ def lt(rhs: float, allow_none: bool = False, message_fmt="Must be less than {rhs
 
     return inner
     """
+
     def lt(
         rhs: float,
         allow_none: bool = False,
@@ -704,7 +554,6 @@ def lt(rhs: float, allow_none: bool = False, message_fmt="Must be less than {rhs
             )
 
         return inner
-    
 
 
 def lte(
@@ -714,7 +563,7 @@ def lte(
 ):
     """
     Generate a validation function that checks if the input value is less than or equal to a given value.
-    
+
     Parameters
     ----------
     rhs : float
@@ -724,6 +573,7 @@ def lte(
     message_fmt : str
         The error message format.
     """
+
     def inner(value):
         compare(
             rhs=rhs,
@@ -738,7 +588,7 @@ def lte(
 def equal(rhs: float, allow_none: bool = False, message_fmt="Must be equal to {rhs}."):
     """
     Generate a validation function that checks if the input value is equal to a given value.
-    
+
     Parameters
     ----------
     rhs : float
@@ -748,6 +598,7 @@ def equal(rhs: float, allow_none: bool = False, message_fmt="Must be equal to {r
     message_fmt : str
         The error message format.
     """
+
     def inner(value):
         compare(
             rhs=rhs,
@@ -764,7 +615,7 @@ def not_equal(
 ):
     """
     Generate a validation function that checks if the input value is not equal to a given value.
-    
+
     Parameters
     ----------
     rhs : float
@@ -774,6 +625,7 @@ def not_equal(
     message_fmt : str
         The error message format.
     """
+
     def inner(value):
         compare(
             rhs=rhs,
