@@ -4,7 +4,6 @@ from .deps import html_deps
 from typing import Optional, Callable
 import datetime
 from shiny.session import get_current_session, require_active_session
-from htmltools import HTML, TagList
 
 
 class Rule:
@@ -29,48 +28,37 @@ class InputValidator:
         self,
         priority=1000,
     ):
-        self.session = require_active_session(get_current_session())
-        self.priority: int = priority
-        self.condition_ = reactive.Value(None)
-        self.rules: reactive.Value[dict[str, Rule]] = reactive.Value({})
+        self.__session = require_active_session(get_current_session())
+        self.__priority: int = priority
+        self.__condition = reactive.Value(None)
+        self.__rules: reactive.Value[dict[str, Rule]] = reactive.Value({})
 
-        self.enabled: bool = False
-        self.observer_handle: Optional[reactive.Effect] = None
-        self.is_child = False
-        self.validator_infos: reactive.Value[
+        self.__enabled: bool = False
+        self.__observer_handle: Optional[reactive.Effect] = None
+        self.__is_child = False
+        self.__validator_infos: reactive.Value[
             dict[str, InputValidator]
         ] = reactive.Value({})
-
-        # TODO when shiny allows us to set client data these dependencies should only be injected once
-        # R code for reference
-        #
-        # if (!isTRUE(session$userData[["shinyvalidate-initialized"]])) {
-        #     shiny::insertUI("body", "beforeEnd",
-        #         list(htmldep(), htmltools::HTML("")),
-        #         immediate = TRUE, session = session
-        #     )
-        #     session$userData[["shinyvalidate-initialized"]] <- TRUE
-        # }
 
         ui.insert_ui(
             html_deps,
             "body",
             "beforeEnd",
             immediate=True,
-            session=self.session,
+            session=self.__session,
         )
 
     def parent(self, validator):
         self.disable()
-        self.is_child = True
+        self.__is_child = True
 
     def condition(self, cond: Optional[Callable] = None):
         if cond is None:
-            return self.condition_
+            return self.__condition
         else:
             if not callable(cond) and cond is not None:
                 raise ValueError("`cond` argument must be a formula or None")
-            self.condition_ = cond
+            self.__condition = cond
 
     def add_validator(
         self,
@@ -85,9 +73,9 @@ class InputValidator:
         validator.parent(self)
 
         with reactive.isolate():
-            validators = self.validator_infos.get()
+            validators = self.__validator_infos.get()
             validators[label] = validator
-            self.validator_infos.set(validators)
+            self.__validator_infos.set(validators)
 
     def add_rule(self, inputId: str, rule: Callable):
         label = str(rule)
@@ -95,68 +83,64 @@ class InputValidator:
             raise ValueError("`rule` argument must be a function")
 
         with reactive.isolate():
-            new_rules = self.rules.get()
+            new_rules = self.__rules.get()
             new_rules[inputId] = Rule(rule, label, session=get_current_session())
-            self.rules.set(new_rules)
+            self.__rules.set(new_rules)
 
     def enable(self):
-        if self.is_child:
+        if self.__is_child:
             return
-        if not self.enabled:
-            with session_context(self.session):
+        if not self.__enabled:
+            with session_context(self.__session):
 
-                @reactive.Effect(priority=self.priority)
+                @reactive.Effect(priority=self.__priority)
                 async def observer():
                     results = self.validate()
-                    await self.session.send_custom_message(
+                    await self.__session.send_custom_message(
                         "validation-jcheng5", results
                     )
 
-                self.enabled = True
-                self.observer_handle = observer
+                self.__enabled = True
+                self.__observer_handle = observer
                 return observer
 
     def disable(self):
-        if self.enabled:
-            self.observer_handle.destroy()
-            self.observer_handle = None
-            self.enabled = False
-            if not self.is_child:
+        if self.__enabled:
+            self.__observer_handle.destroy()
+            self.__observer_handle = None
+            self.__enabled = False
+            if not self.__is_child:
                 results = self.validate()
                 results = {k: None for k in results}
-                self.session.send_custom_message("validation-jcheng5", results)
+                self.__session.send_custom_message("validation-jcheng5", results)
 
     def fields(self):
-        return list(self.rules().keys())
+        return list(self.__rules().keys())
 
     def is_valid(self):
         results = self.validate()
         return all(result is None for result in results.values())
 
     def validate(self):
-        # TODO: Implement verbose logging
-        result = self._validate_impl()
+        result = self.__validate_impl()
         return result
 
-    def _validate_impl(self):
-        # TODO: Implement verbose logging and child_indent
-        condition = self.condition_
+    def __validate_impl(self):
+        condition = self.__condition
         skip_all = callable(condition()) and condition() is not None
 
         if skip_all:
-            # TODO: Implement console_log
             fields = self.fields()
             return {field: None for field in fields}
 
         dependency_results = {}
 
-        for validator_info in self.validator_infos().values():
-            # TODO: Implement console_log
-            child_results = validator_info._validate_impl()
+        for validator_info in self.__validator_infos().values():
+            child_results = validator_info.__validate_impl()
             dependency_results = {**dependency_results, **child_results}
 
         results = {}
-        for name, rule in self.rules().items():
+        for name, rule in self.__rules().items():
             fullname = rule.session.ns(name)
 
             try:
@@ -186,14 +170,11 @@ class InputValidator:
                 )
 
             if result is None:
-                # TODO: Implement console_log
                 if fullname not in results:
                     results[fullname] = None
             elif result == SkipValidation():
-                # TODO: Implement console_log
                 results[fullname] = True
             else:
-                # TODO: Implement console_log
                 results[fullname] = {
                     "type": "error",
                     "message": result,
@@ -208,19 +189,7 @@ class InputValidator:
 
 
 def merge_results(self, resultsA: dict, resultsB: dict) -> dict:
-    """
-    This function merges two dictionaries of results and reorders them to put non-NULLs first.
-    It then removes duplicates from the merged dictionary.
-
-    Parameters:
-    resultsA (dict): The first dictionary of results.
-    resultsB (dict): The second dictionary of results.
-
-    Returns:
-    dict: The merged and reordered dictionary of results.
-    """
     results = {**resultsA, **resultsB}
-    # Reorder to put non-NULLs first; then dedupe
     has_error = {k: v is not None for k, v in results.items()}
     results = {
         k: results[k] for k in sorted(has_error, key=has_error.get, reverse=True)
@@ -244,8 +213,6 @@ def input_provided(val):
         return False
     if all(v is None for v in val):
         return False
-    # TODO handle action buttons
-
     return True
 
 
