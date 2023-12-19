@@ -18,19 +18,13 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-
-      - name: Configure Poetry
-        run: poetry config virtualenvs.in-project true
-
       - name: Install dependencies
         run: |
-          poetry install
+          python -m pip install --upgrade pip
+          python -m pip install build
 
       - name: Build Python package
-        run: poetry build
+        run: python -m build
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
