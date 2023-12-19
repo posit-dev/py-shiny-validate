@@ -1,9 +1,7 @@
 from shiny import Inputs, Outputs, Session, App, render, req, ui
-from py_shiny_validate import InputValidator, sv_email, html_deps, sv_required
+from shiny_validate import InputValidator, check
 
 app_ui = ui.page_fluid(
-    html_deps,
-    # ui.input_text("url", "URL"),
     ui.input_text("email", "Email"),
     ui.input_text("name", "Name"),
     ui.output_text_verbatim("txt"),
@@ -12,7 +10,7 @@ app_ui = ui.page_fluid(
 
 def server(input: Inputs, output: Outputs, session: Session):
     val = InputValidator()
-    val.add_rule("email", sv_email())
+    val.add_rule("email", check.email())
     val.enable()
 
     @render.text

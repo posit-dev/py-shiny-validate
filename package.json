@@ -1,10 +1,10 @@
 {
-  "name": "py-shiny-validate-pkg-template",
+  "name": "shiny-validate-pkg-template",
   "version": "1.0.0",
   "description": "Demo of custom JS components for Shiny for python",
   "main": "index.js",
   "scripts": {
-    "build": "esbuild srcts/shinyvalidate.ts --bundle --outfile=py_shiny_validate/distjs/index.js",
+    "build": "esbuild srcts/shinyvalidate.ts --bundle --outfile=shiny_validate/distjs/index.js",
     "watch": "npm run build -- --watch"
   },
   "author": "Nick Strayer",

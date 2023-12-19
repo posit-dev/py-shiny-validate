@@ -3,11 +3,11 @@ requires = ["setuptools>=40.6.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "py_shiny_validate"
+name = "shiny_validate"
 version = "0.1"
 dependencies = ["shiny >= 0.6.0", "numpy"]
 
 [tool.setuptools]
-packages = ["py_shiny_validate"]
+packages = ["shiny_validate"]
 include-package-data = true
 zip-safe = false

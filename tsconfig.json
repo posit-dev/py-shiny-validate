@@ -11,7 +11,7 @@
     "checkJs": false,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "outDir": "py_shiny_validate/distjs",
+    "outDir": "shiny_validate/distjs",
     "rootDir": "srcts",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
