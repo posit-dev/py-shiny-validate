@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "shiny_validate"
 version = "0.1"
 dependencies = ["shiny >= 0.6.0", "numpy"]
-authors = ["Gordon Shotwell" <gordon.shotwell@posit.co>, "Joe Cheng"]
+authors = [{name = "Gordon Shotwell", email = "gordon.shotwell@posit.co"}]
 
 [tool.setuptools]
 packages = ["shiny_validate"]
