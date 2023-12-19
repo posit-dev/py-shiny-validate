@@ -5,10 +5,21 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "shiny_validate"
 version = "0.1"
-requires = ["shiny >= 0.6.0", "numpy"]
 authors = [{name = "Gordon Shotwell", email = "gordon.shotwell@posit.co"}]
 
 [tool.setuptools]
 packages = ["shiny_validate"]
 include-package-data = true
 zip-safe = false
+
+[tool.poetry]
+name = "shiny_validate"
+version = "0.1"
+authors = ["Gordon Shotwell <gordon.shotwell@posit.co>"]
+description = "Input Validation for Shiny apps"
+readme = "README.md"
+
+
+[tool.poetry.dependencies]
+shiny = "0.6"
+
