@@ -22,4 +22,5 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 shiny = "0.6"
+python = "^3.8"
 
