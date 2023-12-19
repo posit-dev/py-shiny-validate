@@ -17,11 +17,19 @@ def check_input_length(
 
 
 def input_provided(val: any):
-    print(val)
     if val is None:
         return False
     if isinstance(val, Exception):
         return False
+    if not isinstance(val, (int, float, str, bool)):
+        return True
+    if len(val) == 0:
+        return False
+    if all(x is None for x in val):
+        return False
+    if isinstance(val, str) and not any(x for x in val if x != ""):
+        return False
+    # TODO action button
     return True
 
 

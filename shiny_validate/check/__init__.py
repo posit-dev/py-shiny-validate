@@ -1,4 +1,13 @@
-from .check import optional, basic, email, url, compose_rules, between, in_set
+from .check import (
+    basic,
+    between,
+    compose_rules,
+    email,
+    in_set,
+    optional,
+    required,
+    url,
+)
 
 __all__ = [
     "basic",
@@ -7,5 +16,6 @@ __all__ = [
     "email",
     "in_set",
     "optional",
+    "required",
     "url",
 ]
