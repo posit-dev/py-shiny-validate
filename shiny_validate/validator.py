@@ -1,5 +1,6 @@
 from shiny import reactive, ui, Session
 from shiny.session import session_context
+from shiny.types import ActionButtonValue
 from .deps import html_deps
 from typing import Optional, Callable
 import datetime
@@ -201,18 +202,20 @@ def merge_results(self, resultsA: dict, resultsB: dict) -> dict:
     }
     return results
 
-
+# TODO: should we be treating MISSING like None?
 def input_provided(val):
     if val is None:
         return False
     if isinstance(val, Exception):
         return False
-    if not isinstance(val, (int, float, str, bool)):
+    if isinstance(val, ActionButtonValue):
+        return val > 0
+    if isinstance(val, (int, float, str, bool)):
         return True
-    if len(val) == 0:
-        return False
-    if all(v is None for v in val):
-        return False
+    try:
+        return all(v is None for v in iter(val))
+    except TypeError:
+        pass
     return True
 
 
