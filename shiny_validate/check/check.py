@@ -23,9 +23,7 @@ def input_provided(val: any):
         return False
     if not isinstance(val, (int, float, str, bool)):
         return True
-    if len(val) == 0:
-        return False
-    if all(x is None for x in val):
+    if val is None:
         return False
     if isinstance(val, str) and not any(x for x in val if x != ""):
         return False
@@ -240,14 +238,12 @@ def compose_rules(*args):
     return inner
 
 
-def basic(allow_multiple: bool, allow_none: bool, allow_nan: bool, allow_inf: bool):
+def basic(allow_none: bool, allow_nan: bool, allow_inf: bool):
     """
     Basic validation function.
 
     Parameters
     ----------
-    allow_multiple : bool
-        If False, the input value must be a single value.
     allow_none : bool
         If False, the input value cannot be None.
     allow_inf : bool

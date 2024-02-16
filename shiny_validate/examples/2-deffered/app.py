@@ -1,4 +1,4 @@
-from shiny import Inputs, Outputs, Session, App, reactive, render, req, ui
+from shiny import Inputs, Outputs, Session, App, reactive, ui
 from shiny_validate import InputValidator, check
 
 app_ui = ui.page_fluid(
@@ -26,7 +26,8 @@ def server(input: Inputs, output: Outputs, session: Session):
     iv.add_rule("email", check.required())
     iv.add_rule("email", check.email())
     iv.add_rule(
-        "topics", lambda x: "Please choose two or more topics" if len(x) < 2 else None
+        "topics",
+        lambda x: "Please choose two or more topics" if len(x) < 2 else None,
     )
     iv.add_rule("accept_terms", check.required())
     iv.add_rule(
@@ -40,7 +41,9 @@ def server(input: Inputs, output: Outputs, session: Session):
         if iv.is_valid():
             reset_form()
             m = ui.modal(
-                "Form submitted successfully", title="Success!", easy_close=True
+                "Form submitted successfully",
+                title="Success!",
+                easy_close=True,
             )
             ui.modal_show(m)
         else:
