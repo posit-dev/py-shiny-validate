@@ -69,11 +69,5 @@ def server(input: Inputs, output: Outputs, session: Session):
         if iv.is_valid():
             print(value())
 
-    @reactive.Effect
-    @reactive.event(input.reset)
-    def _():
-        print("foo")
-        reset_pass()
-
 
 app = App(app_ui, server)

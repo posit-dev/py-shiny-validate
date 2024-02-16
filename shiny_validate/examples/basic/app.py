@@ -1,4 +1,4 @@
-from shiny import Inputs, Outputs, Session, App, render, req, ui
+from shiny import Inputs, Outputs, Session, App, render, ui
 from shiny_validate import InputValidator, check
 
 app_ui = ui.page_fluid(
