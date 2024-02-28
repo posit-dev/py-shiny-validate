@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "shiny_validate"
-version = "0.1"
+version = "0.1.1"
 authors = [{name = "Gordon Shotwell", email = "gordon.shotwell@posit.co"}]
 
 [tool.setuptools]
