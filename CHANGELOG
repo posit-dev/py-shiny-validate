@@ -1,6 +1,7 @@
 # Changelog
 
-## In progress
+## Version 0.1.1
+- Relax shiny version requirement
 - Bug fixes to check.required
 
 
