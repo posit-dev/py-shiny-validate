@@ -23,11 +23,20 @@ pip install git+https://github.com/rstudio/shinyvalidate.git
 
 To add validation to your Shiny app, you need to:
 
-1.  Create an InputValidator object: `iv <- InputValidator`
+1.  Create an InputValidator object: `iv = InputValidator()`
 
 2.  Add one or more validation rules to the InputValidator: `iv.add_rule("title", check.required())`
 
-3.  Turn the validator on: `iv$enable()`
+3.  Turn the validator on: `iv.enable()`
+
+4.  Use the validator in your renderer functions: 
+
+```python
+@render.text
+def title():
+    req(iv.is_valid())
+    return f"This app is called {input.title()}"
+```
 
 That's all you need to do to get validation messages to show up.
 
