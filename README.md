@@ -22,11 +22,11 @@ pip install git+https://github.com/posit-dev/py-shiny-validate.git
 
 To add validation to your Shiny app, you need to:
 
-1.  Create an InputValidator object: `iv <- InputValidator`
+1.  Create an InputValidator object: `iv = InputValidator()`
 
 2.  Add one or more validation rules to the InputValidator: `iv.add_rule("title", check.required())`
 
-3.  Turn the validator on: `iv$enable()`
+3.  Turn the validator on: `iv.enable()`
 
 That's all you need to do to get validation messages to show up.
 
@@ -56,4 +56,13 @@ def server(input, output, session):
 
 
 app = App(app_ui, server)
+```
+
+You can also use the `.is_valid()` method to ensure that the inputs are valid before rendering an output:
+
+```python
+@render.plot
+def plot():
+    req(iv.is_valid())
+    # Build and return a plot if the inputs are valid
 ```
