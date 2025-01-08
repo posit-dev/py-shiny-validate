@@ -110,9 +110,19 @@ class InputValidator:
             self.__observer_handle = None
             self.__enabled = False
             if not self.__is_child:
-                results = self.validate()
-                results = {k: None for k in results}
-                self.__session.send_custom_message("validation-jcheng5", results)
+                with session_context(self.__session):
+                    
+                    @reactive.Effect(priority=self.__priority)
+                    async def observer():
+                        results = self.validate()
+                        results = {k: None for k in results}
+                        await self.__session.send_custom_message(
+                            "validation-jcheng5", results
+                        )
+
+                    self.__observer_handle = observer
+                    
+                    return observer
 
     def fields(self):
         return list(self.__rules().keys())
