@@ -12,11 +12,10 @@ Install from Pypi with:
 pip install shiny_validate
 ```
 
-Or, you can install the latest development version from GitHub using the `remotes` package.
+Or, you can install the latest development version from GitHub:
 
 ```
-pip install git+https://github.com/rstudio/shinyvalidate.git
-
+pip install git+https://github.com/posit-dev/py-shiny-validate.git
 ```
 
 ## Basic usage
