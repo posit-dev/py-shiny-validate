@@ -28,15 +28,6 @@ To add validation to your Shiny app, you need to:
 
 3.  Turn the validator on: `iv.enable()`
 
-4.  Use the validator in your renderer functions: 
-
-```python
-@render.text
-def title():
-    req(iv.is_valid())
-    return f"This app is called {input.title()}"
-```
-
 That's all you need to do to get validation messages to show up.
 
 ```python
@@ -65,4 +56,13 @@ def server(input, output, session):
 
 
 app = App(app_ui, server)
+```
+
+You can also use the `.is_valid()` method in your renderer functions to ensure that the inputs are valid before rendering an output:
+
+```python
+@render.plot
+def plot():
+    req(iv.is_valid())
+    # Build and return a plot if the inputs are valid
 ```
