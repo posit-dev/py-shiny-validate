@@ -58,7 +58,7 @@ def server(input, output, session):
 app = App(app_ui, server)
 ```
 
-You can also use the `.is_valid()` method in your renderer functions to ensure that the inputs are valid before rendering an output:
+You can also use the `.is_valid()` method to ensure that the inputs are valid before rendering an output:
 
 ```python
 @render.plot
