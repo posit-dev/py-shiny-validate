@@ -1,5 +1,9 @@
 # Changelog
 
+## [UNRELEASED]
+
+- Fixed an issue with the `InputValidate.disable()` method that caused a runtime warning. Thanks to @mhanf for reporting and @cs42 for proposing a fix. (#10)
+
 ## Version 0.1.1
 - Relax shiny version requirement
 - Bug fixes to check.required
