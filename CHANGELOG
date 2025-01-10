@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.1.2
+- call custom message async in disable()
+
 ## Version 0.1.1
 - Relax shiny version requirement
 - Bug fixes to check.required
