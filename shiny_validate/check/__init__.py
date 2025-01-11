@@ -7,6 +7,16 @@ from .check import (
     optional,
     required,
     url,
+    regex,
+    basic,
+    integer,
+    compare,
+    gt,
+    gte,
+    lt,
+    lte,
+    equal,
+    not_equal,
 )
 
 __all__ = [
@@ -18,4 +28,14 @@ __all__ = [
     "optional",
     "required",
     "url",
+    "regex",
+    "basic",
+    "integer",
+    "compare",
+    "gt",
+    "gte",
+    "lt",
+    "lte",
+    "equal",
+    "not_equal",
 ]
