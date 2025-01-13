@@ -1,4 +1,4 @@
-from .check import (
+from ._check import (
     basic,
     between,
     compose_rules,
