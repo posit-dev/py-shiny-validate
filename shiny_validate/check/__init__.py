@@ -1,4 +1,4 @@
-from .check import (
+from ._check import (
     basic,
     between,
     compose_rules,
@@ -7,6 +7,15 @@ from .check import (
     optional,
     required,
     url,
+    regex,
+    integer,
+    compare,
+    gt,
+    gte,
+    lt,
+    lte,
+    equal,
+    not_equal,
 )
 
 __all__ = [
@@ -18,4 +27,13 @@ __all__ = [
     "optional",
     "required",
     "url",
+    "regex",
+    "integer",
+    "compare",
+    "gt",
+    "gte",
+    "lt",
+    "lte",
+    "equal",
+    "not_equal",
 ]
