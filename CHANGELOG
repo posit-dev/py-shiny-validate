@@ -1,5 +1,9 @@
 # Changelog
 
+## [UNRELEASED]
+
+- `InputValidator.add_rule()` now composes validation rules rather than overwriting existing rules. (#14)
+
 ## Version 0.1.1
 - Relax shiny version requirement
 - Bug fixes to check.required
