@@ -4,6 +4,8 @@
 
 - `InputValidator.add_rule()` now composes validation rules rather than overwriting existing rules. (#14)
 
+- All check functions in `shiny_validate.check` are now public, improving discoverability via autocomplete. (@mhanf #16)
+
 ## Version 0.1.1
 - Relax shiny version requirement
 - Bug fixes to check.required
