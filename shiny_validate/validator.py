@@ -3,6 +3,7 @@ from shiny.session import session_context
 from .deps import html_deps
 from typing import Optional, Callable
 import datetime
+import asyncio
 from shiny.session import get_current_session, require_active_session
 
 
@@ -119,7 +120,16 @@ class InputValidator:
             if not self.__is_child:
                 results = self.validate()
                 results = {k: None for k in results}
-                self.__session.send_custom_message("validation-jcheng5", results)
+
+                async def _disable():
+                    await self.__session.send_custom_message(
+                        "validation-jcheng5", results
+                    )
+
+                if loop := get_running_loop():
+                    loop.create_task(_disable())
+                else:
+                    asyncio.run(_disable())
 
     def fields(self):
         return list(self.__rules().keys())
@@ -226,3 +236,9 @@ def input_provided(val):
 
 def timestamp_str(time=datetime.datetime.now()):
     return time.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+def get_running_loop():
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        return None
