@@ -32,7 +32,7 @@ class InputValidator:
         self.__session = require_active_session(get_current_session())
         self.__priority: int = priority
         self.__condition = reactive.Value(None)
-        self.__rules: reactive.Value[dict[str, Rule]] = reactive.Value({})
+        self.__rules: reactive.Value[dict[str, list[Rule]]] = reactive.Value({})
 
         self.__enabled: bool = False
         self.__observer_handle: Optional[reactive.Effect] = None
@@ -83,10 +83,17 @@ class InputValidator:
         if not callable(rule):
             raise ValueError("`rule` argument must be a function")
 
+        new_rule = Rule(rule, label, session=get_current_session())
+
         with reactive.isolate():
-            new_rules = self.__rules.get()
-            new_rules[inputId] = Rule(rule, label, session=get_current_session())
-            self.__rules.set(new_rules)
+            rules = self.__rules.get()
+            if inputId in rules.keys():
+                rules[inputId].append(new_rule)
+            else:
+                rules[inputId] = [new_rule]
+            
+            self.__rules.unset()
+            self.__rules.set(rules)
 
     def enable(self):
         if self.__is_child:
@@ -150,46 +157,47 @@ class InputValidator:
             dependency_results = {**dependency_results, **child_results}
 
         results = {}
-        for name, rule in self.__rules().items():
-            fullname = rule.session.ns(name)
+        for name, rules in self.__rules().items():
+            fullname = rules[0].session.ns(name)
+            results[fullname] = None
 
-            try:
-                result = rule.rule(rule.session.input[name]())
-            except Exception as e:
-                result = "An unexpected error occurred during input validation: " + str(
-                    e
+            for rule in rules:
+                try:
+                    result = rule.rule(rule.session.input[name]())
+                except Exception as e:
+                    result = "An unexpected error occurred during input validation: " + str(
+                        e
+                    )
+
+                result_is_html = isinstance(result, (str, bytes))
+                if result_is_html:
+                    result = str(result)
+
+                is_valid_result = (
+                    result is None
+                    or (isinstance(result, str))
+                    or result == SkipValidation()
                 )
 
-            result_is_html = isinstance(result, (str, bytes))
-            if result_is_html:
-                result = str(result)
+                if not is_valid_result:
+                    raise ValueError(
+                        "Result of '"
+                        + name
+                        + "' validation was not a single-character vector (actual class: "
+                        + str(type(result))
+                        + ")"
+                    )
 
-            is_valid_result = (
-                result is None
-                or (isinstance(result, str))
-                or result == SkipValidation()
-            )
-
-            if not is_valid_result:
-                raise ValueError(
-                    "Result of '"
-                    + name
-                    + "' validation was not a single-character vector (actual class: "
-                    + str(type(result))
-                    + ")"
-                )
-
-            if result is None:
-                if fullname not in results:
-                    results[fullname] = None
-            elif result == SkipValidation():
-                results[fullname] = True
-            else:
-                results[fullname] = {
-                    "type": "error",
-                    "message": result,
-                    "is_html": result_is_html,
-                }
+                if result is not None:
+                    if result == SkipValidation():
+                        results[fullname] = True
+                    else:
+                        results[fullname] = {
+                            "type": "error",
+                            "message": result,
+                            "is_html": result_is_html,
+                        }
+                    break
 
         for key in results:
             if results[key] is True:
