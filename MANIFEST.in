@@ -1,0 +1,2 @@
+recursive-include shiny_validate/check *
+recursive-include shiny_validate/distjs *
