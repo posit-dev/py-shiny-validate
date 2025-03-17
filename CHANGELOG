@@ -1,6 +1,6 @@
 # Changelog
 
-## [UNRELEASED]
+## 0.1.2 - 2025-03-17
 
 - Fixed an issue with the `InputValidate.disable()` method that caused a runtime warning. Thanks to @mhanf for reporting and @cs42 for proposing a fix. (#10)
 
@@ -10,10 +10,11 @@
 
 - Fixed missing `MANIFEST.in` causing installation issues. (@julibeg #19)
 
-## Version 0.1.1
+## 0.1.1 - 2024-02-28
+
 - Relax shiny version requirement
 - Bug fixes to check.required
 
+## 0.1.0 - 2024-02-16
 
-## Version 0.1.0 
-- Initital implementation
+- Initial implementation
