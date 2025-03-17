@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "shiny_validate"
-version = "0.1.1"
+version = "0.1.2"
 authors = [{name = "Gordon Shotwell", email = "gordon.shotwell@posit.co"}]
 
 [tool.setuptools]
@@ -14,7 +14,7 @@ zip-safe = false
 
 [tool.poetry]
 name = "shiny_validate"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Gordon Shotwell <gordon.shotwell@posit.co>"]
 description = "Input Validation for Shiny apps"
 readme = "README.md"
