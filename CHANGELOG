@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3 - 2025-03-17
+
+- Fixed publishing to restore package description and README.
+
 ## 0.1.2 - 2025-03-17
 
 - Fixed an issue with the `InputValidate.disable()` method that caused a runtime warning. Thanks to @mhanf for reporting and @cs42 for proposing a fix. (#10)
